@@ -14,9 +14,15 @@ class Incident(Base):
     title = Column(String, index=True)
     status = Column(String, default="open")
 
-Base.metadata.create_all(bind=engine)
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="NexusMonitor API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Создаем таблицы при старте
+    Base.metadata.create_all(bind=engine)
+    yield
+
+app = FastAPI(title="NexusMonitor API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],  
